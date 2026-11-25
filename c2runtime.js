@@ -15230,7 +15230,7 @@ var ip=p.Instance.prototype;
 ip.onCreate=function(){
  var self=this,r=this.runtime;
  this.status='Initializing';this.portrait=false;this.busy=false;
- this.proto=Object.getPrototypeOf(r);this.native=this.proto['setSize'];this.wrapper=null;
+ this.proto=Object.getPrototypeOf(r);this.native=this.proto['setSize'];this.wrapper=null;this.anchorReady=false;
  this.baseW=r.original_width;this.baseH=r.original_height;this.baseX=r.parallax_x_origin;this.baseY=r.parallax_y_origin;
  if(typeof this.native!=='function'||r.fullscreen_mode!==4){this.status='Requires Letterbox scale (4)';this.log();return;}
  this.wrapper=function(w,h,force){
@@ -15238,17 +15238,22 @@ ip.onCreate=function(){
   var portrait=h>w, a=portrait?2:0;
   var rw=Math.max(1,Number(self.properties[a])|| (portrait?720:1280));
   var rh=Math.max(1,Number(self.properties[a+1])|| (portrait?1280:720));
+  var logicalScale=Math.min(w,h)/Math.min(rw,rh);
+  rw=w/logicalScale;rh=h/logicalScale;
   var changed=r.lastWindowWidth!==w||r.lastWindowHeight!==h||r.original_width!==rw||r.original_height!==rh;
   if(!changed&&!force)return self.native.call(r,w,h,force);
   self.busy=true;
   try{
    self.portrait=portrait;r.original_width=rw;r.original_height=rh;
-   r.parallax_x_origin=rw/2;r.parallax_y_origin=rh/2;
+   if(!self.anchorReady){
+    if(!r.running_layout){r.parallax_x_origin=rw/2;r.parallax_y_origin=rh/2;}
+    self.anchorReady=true;
+   }
    var result=self.native.call(r,w,h,true);
    r.aspect_scale=Math.min(r.width/rw,r.height/rh);
    var layout=r.running_layout;
-   if(layout){layout.boundScrolling();for(var i=0;i<layout.layers.length;i++)layout.layers[i].updateViewport(null);}
-   self.status='OK '+rw+'x'+rh+' canvas '+r.cssWidth+'x'+r.cssHeight;
+   if(layout){for(var i=0;i<layout.layers.length;i++)layout.layers[i].updateViewport(null);}
+   self.status='OK '+rw+'x'+rh+' canvas '+r.cssWidth+'x'+r.cssHeight+(layout?' camera '+layout.scrollX+','+layout.scrollY:'');
    self.log();
    if(layout)r.trigger(p.cnds.OnChanged,self);
    return result;
@@ -19342,11 +19347,11 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.AdaptiveDisplay,
 	cr.plugins_.Arr,
 	cr.plugins_.Button,
-	cr.plugins_.LocalStorage,
 	cr.plugins_.Function,
+	cr.plugins_.LocalStorage,
+	cr.plugins_.Spritefont2,
 	cr.plugins_.Mouse,
 	cr.plugins_.Sprite,
-	cr.plugins_.Spritefont2,
 	cr.behaviors.Fade,
 	cr.system_object.prototype.cnds.IsGroupActive,
 	cr.system_object.prototype.cnds.Compare,
