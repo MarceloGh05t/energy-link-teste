@@ -3946,12 +3946,6 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		if (isfullscreen)
 			mode = this.fullscreen_scaling;
 		var dpr = this.devicePixelRatio;
-		// Responsive Letterbox: switch reference dimensions before native sizing.
-		if (mode === 4 && w > 0 && h > 0)
-		{
-			this.original_width = w >= h ? 1280 : 720;
-			this.original_height = w >= h ? 720 : 1280;
-		}
 		if (mode >= 4)
 		{
 			if (mode === 5 && dpr !== 1)	// integer scaling
@@ -15226,6 +15220,52 @@ cr.system_object.prototype.loadFromJSON = function (o)
 cr.shaders = {};
 ;
 ;
+cr.plugins_.AdaptiveDisplay=function(runtime){this.runtime=runtime;};
+(function(){
+var p=cr.plugins_.AdaptiveDisplay.prototype;
+p.Type=function(plugin){this.plugin=plugin;this.runtime=plugin.runtime;};
+p.Type.prototype.onCreate=function(){};
+p.Instance=function(type){this.type=type;this.runtime=type.runtime;};
+var ip=p.Instance.prototype;
+ip.onCreate=function(){
+ var self=this,r=this.runtime;
+ this.status='Initializing';this.portrait=false;this.busy=false;
+ this.proto=Object.getPrototypeOf(r);this.native=this.proto['setSize'];this.wrapper=null;
+ this.baseW=r.original_width;this.baseH=r.original_height;this.baseX=r.parallax_x_origin;this.baseY=r.parallax_y_origin;
+ if(typeof this.native!=='function'||r.fullscreen_mode!==4){this.status='Requires Letterbox scale (4)';this.log();return;}
+ this.wrapper=function(w,h,force){
+  if(this!==r||self.busy||!(w>0&&h>0)||r.fullscreen_mode!==4)return self.native.apply(this,arguments);
+  var portrait=h>w, a=portrait?2:0;
+  var rw=Math.max(1,Number(self.properties[a])|| (portrait?720:1280));
+  var rh=Math.max(1,Number(self.properties[a+1])|| (portrait?1280:720));
+  var changed=r.lastWindowWidth!==w||r.lastWindowHeight!==h||r.original_width!==rw||r.original_height!==rh;
+  if(!changed&&!force)return self.native.call(r,w,h,force);
+  self.busy=true;
+  try{
+   self.portrait=portrait;r.original_width=rw;r.original_height=rh;
+   r.parallax_x_origin=rw/2;r.parallax_y_origin=rh/2;
+   var result=self.native.call(r,w,h,true);
+   r.aspect_scale=Math.min(r.width/rw,r.height/rh);
+   var layout=r.running_layout;
+   if(layout){layout.boundScrolling();for(var i=0;i<layout.layers.length;i++)layout.layers[i].updateViewport(null);}
+   self.status='OK '+rw+'x'+rh+' canvas '+r.cssWidth+'x'+r.cssHeight;
+   self.log();
+   if(layout)r.trigger(p.cnds.OnChanged,self);
+   return result;
+  }finally{self.busy=false;}
+ };
+ this.proto['setSize']=this.wrapper;
+ this.refresh();
+};
+ip.log=function(){if(this.properties[4]===1&&typeof console!=='undefined'&&console.log)console.log('[Adaptive Display] '+this.status);};
+ip.refresh=function(){if(this.wrapper&&!this.busy)this.runtime['setSize'](window.innerWidth,window.innerHeight,true);};
+ip.onDestroy=function(){if(this.wrapper&&this.proto['setSize']===this.wrapper){this.proto['setSize']=this.native;var r=this.runtime;r.original_width=this.baseW;r.original_height=this.baseH;r.parallax_x_origin=this.baseX;r.parallax_y_origin=this.baseY;}};
+function Cnds(){} Cnds.prototype.OnChanged=function(){return true;}; Cnds.prototype.IsPortrait=function(){return this.portrait;};p.cnds=new Cnds();
+function Acts(){} Acts.prototype.Refresh=function(){this.refresh();};p.acts=new Acts();
+function Exps(){} Exps.prototype.ReferenceWidth=function(ret){ret.set_int(this.runtime.original_width);};Exps.prototype.ReferenceHeight=function(ret){ret.set_int(this.runtime.original_height);};Exps.prototype.Status=function(ret){ret.set_string(this.status);};p.exps=new Exps();
+}());
+;
+;
 cr.plugins_.Arr = function(runtime)
 {
 	this.runtime = runtime;
@@ -19299,13 +19339,14 @@ cr.behaviors.Fade = function(runtime)
 	behaviorProto.exps = new Exps();
 }());
 cr.getObjectRefTable = function () { return [
+	cr.plugins_.AdaptiveDisplay,
 	cr.plugins_.Arr,
 	cr.plugins_.Button,
 	cr.plugins_.LocalStorage,
-	cr.plugins_.Mouse,
 	cr.plugins_.Function,
-	cr.plugins_.Spritefont2,
+	cr.plugins_.Mouse,
 	cr.plugins_.Sprite,
+	cr.plugins_.Spritefont2,
 	cr.behaviors.Fade,
 	cr.system_object.prototype.cnds.IsGroupActive,
 	cr.system_object.prototype.cnds.Compare,
@@ -19323,6 +19364,7 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Sprite.prototype.acts.SetX,
 	cr.plugins_.Sprite.prototype.acts.SetY,
 	cr.system_object.prototype.cnds.OnLayoutStart,
+	cr.plugins_.AdaptiveDisplay.prototype.acts.Refresh,
 	cr.plugins_.Button.prototype.cnds.OnClicked,
 	cr.system_object.prototype.acts.GoToLayout,
 	cr.plugins_.Spritefont2.prototype.acts.SetVisible,
