@@ -3946,6 +3946,12 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		if (isfullscreen)
 			mode = this.fullscreen_scaling;
 		var dpr = this.devicePixelRatio;
+		// Responsive Letterbox: switch reference dimensions before native sizing.
+		if (mode === 4 && w > 0 && h > 0)
+		{
+			this.original_width = w >= h ? 1280 : 720;
+			this.original_height = w >= h ? 720 : 1280;
+		}
 		if (mode >= 4)
 		{
 			if (mode === 5 && dpr !== 1)	// integer scaling
