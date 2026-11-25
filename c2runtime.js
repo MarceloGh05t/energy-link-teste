@@ -19344,14 +19344,14 @@ cr.behaviors.Fade = function(runtime)
 	behaviorProto.exps = new Exps();
 }());
 cr.getObjectRefTable = function () { return [
-	cr.plugins_.AdaptiveDisplay,
-	cr.plugins_.Arr,
 	cr.plugins_.Button,
 	cr.plugins_.Function,
 	cr.plugins_.LocalStorage,
-	cr.plugins_.Mouse,
 	cr.plugins_.Spritefont2,
 	cr.plugins_.Sprite,
+	cr.plugins_.Mouse,
+	cr.plugins_.AdaptiveDisplay,
+	cr.plugins_.Arr,
 	cr.behaviors.Fade,
 	cr.system_object.prototype.cnds.IsGroupActive,
 	cr.system_object.prototype.cnds.Compare,
