@@ -20555,6 +20555,7 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Text.prototype.acts.SetText,
 	cr.plugins_.Button.prototype.exps.X,
 	cr.plugins_.Button.prototype.cnds.OnClicked,
+	cr.system_object.prototype.acts.GoToLayout,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
 	cr.system_object.prototype.exps.originalwindowwidth,
 	cr.system_object.prototype.exps.layerparallaxx,
