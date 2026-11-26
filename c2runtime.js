@@ -20575,7 +20575,6 @@ cr.getObjectRefTable = function () { return [
 	cr.system_object.prototype.exps.layerparallaxy,
 	cr.plugins_.Sprite.prototype.exps.Height,
 	cr.plugins_.Sprite.prototype.cnds.OnCollision,
-	cr.behaviors.EightDir.prototype.acts.SetSpeed,
 	cr.plugins_.Sprite.prototype.exps.Y,
 	cr.plugins_.AdaptiveDisplay.prototype.cnds.OnChanged,
 	cr.plugins_.Spritefont2.prototype.acts.SetVisible,
