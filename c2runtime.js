@@ -15267,7 +15267,18 @@ ip.refresh=function(){if(this.wrapper&&!this.busy)this.runtime['setSize'](window
 ip.onDestroy=function(){if(this.wrapper&&this.proto['setSize']===this.wrapper){this.proto['setSize']=this.native;var r=this.runtime;r.original_width=this.baseW;r.original_height=this.baseH;r.parallax_x_origin=this.baseX;r.parallax_y_origin=this.baseY;}};
 function Cnds(){} Cnds.prototype.OnChanged=function(){return true;}; Cnds.prototype.IsPortrait=function(){return this.portrait;};p.cnds=new Cnds();
 function Acts(){} Acts.prototype.Refresh=function(){this.refresh();};p.acts=new Acts();
-function Exps(){} Exps.prototype.ReferenceWidth=function(ret){ret.set_int(this.runtime.original_width);};Exps.prototype.ReferenceHeight=function(ret){ret.set_int(this.runtime.original_height);};Exps.prototype.Status=function(ret){ret.set_string(this.status);};p.exps=new Exps();
+function Exps(){} Exps.prototype.ReferenceWidth=function(ret){ret.set_int(this.runtime.original_width);};Exps.prototype.ReferenceHeight=function(ret){ret.set_int(this.runtime.original_height);};Exps.prototype.Status=function(ret){ret.set_string(this.status);};
+Exps.prototype.OriginX=function(ret){
+ var layout=this.runtime.running_layout, layer=layout&&layout.layers[0];
+ if(!layer){ret.set_float(0);return;}
+ ret.set_float(layer.viewLeft-(layout.scrollX-this.baseW/2)*layer.parallaxX);
+};
+Exps.prototype.OriginY=function(ret){
+ var layout=this.runtime.running_layout, layer=layout&&layout.layers[0];
+ if(!layer){ret.set_float(0);return;}
+ ret.set_float(layer.viewTop-(layout.scrollY-this.baseH/2)*layer.parallaxY);
+};
+p.exps=new Exps();
 }());
 ;
 ;
@@ -20522,15 +20533,15 @@ cr.behaviors.scrollto = function(runtime)
 	behaviorProto.acts = new Acts();
 }());
 cr.getObjectRefTable = function () { return [
+	cr.plugins_.AdaptiveDisplay,
+	cr.plugins_.Arr,
 	cr.plugins_.Button,
 	cr.plugins_.Function,
 	cr.plugins_.LocalStorage,
-	cr.plugins_.Spritefont2,
 	cr.plugins_.Sprite,
+	cr.plugins_.Spritefont2,
 	cr.plugins_.Mouse,
 	cr.plugins_.Text,
-	cr.plugins_.AdaptiveDisplay,
-	cr.plugins_.Arr,
 	cr.behaviors.Fade,
 	cr.behaviors.scrollto,
 	cr.behaviors.EightDir,
@@ -20551,13 +20562,17 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Sprite.prototype.acts.SetY,
 	cr.system_object.prototype.cnds.OnLayoutStart,
 	cr.plugins_.AdaptiveDisplay.prototype.acts.Refresh,
+	cr.system_object.prototype.exps.scrollx,
 	cr.plugins_.Text.prototype.acts.SetText,
 	cr.plugins_.Button.prototype.exps.X,
 	cr.plugins_.Button.prototype.cnds.OnClicked,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
+	cr.plugins_.AdaptiveDisplay.prototype.exps.OriginX,
 	cr.plugins_.Sprite.prototype.exps.Height,
+	cr.plugins_.AdaptiveDisplay.prototype.exps.OriginY,
 	cr.plugins_.Sprite.prototype.cnds.OnCollision,
 	cr.plugins_.Sprite.prototype.exps.Y,
+	cr.plugins_.AdaptiveDisplay.prototype.cnds.OnChanged,
 	cr.plugins_.Spritefont2.prototype.acts.SetVisible,
 	cr.plugins_.Spritefont2.prototype.acts.SetPos,
 	cr.system_object.prototype.acts.SetLayerVisible,
