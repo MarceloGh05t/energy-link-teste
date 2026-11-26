@@ -20561,7 +20561,6 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Sprite.prototype.acts.SetX,
 	cr.plugins_.Sprite.prototype.acts.SetY,
 	cr.system_object.prototype.cnds.OnLayoutStart,
-	cr.plugins_.AdaptiveDisplay.prototype.acts.Refresh,
 	cr.system_object.prototype.exps.scrollx,
 	cr.plugins_.Text.prototype.acts.SetText,
 	cr.plugins_.Button.prototype.exps.X,
