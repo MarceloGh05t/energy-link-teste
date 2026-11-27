@@ -15236,6 +15236,7 @@ ip.onCreate=function(){
  this.installCamera();
  this.wrapper=function(w,h,force){
   if(this!==r||self.busy||!(w>0&&h>0)||r.fullscreen_mode!==4)return self.native.apply(this,arguments);
+  if(!self.cameraPatch)self.installCamera();
   var portrait=h>w, a=portrait?2:0;
   var rw=Math.max(1,Number(self.properties[a])|| (portrait?720:1280));
   var rh=Math.max(1,Number(self.properties[a+1])|| (portrait?1280:720));
@@ -15247,6 +15248,7 @@ ip.onCreate=function(){
   try{
    var oldW=r.original_width, oldH=r.original_height;
    var layout=r.running_layout;
+   var cameraBefore=layout&&self.cameraPatch?self.cameraPatch.capture(layout):null;
    self.portrait=portrait;r.original_width=rw;r.original_height=rh;
    if(!self.anchorReady){
     r.parallax_x_origin=self.baseX;r.parallax_y_origin=self.baseY;
@@ -15256,7 +15258,7 @@ ip.onCreate=function(){
    r.aspect_scale=(r.width/r.height>rw/rh)?r.height/rh:r.width/rw;
    if(layout){
     if(self.cameraPatch && (oldW!==rw||oldH!==rh))
-     self.cameraPatch.rebase(layout,(rw-oldW)/2,(rh-oldH)/2);
+     self.cameraPatch.rebase(layout,(rw-oldW)/2,(rh-oldH)/2,cameraBefore);
     else {layout.scrollToX(layout.scrollX);layout.scrollToY(layout.scrollY);}
     for(var i=0;i<layout.layers.length;i++)layout.layers[i].updateViewport(null);
    }
@@ -15270,6 +15272,7 @@ ip.onCreate=function(){
  this.refresh();
 };
 ip.installCamera=function(){
+ if(this.cameraPatch)return;
  var self=this,r=this.runtime, sample=r.running_layout||(r.layouts_by_index&&r.layouts_by_index[0]);
  if(!sample)return;
  var proto=Object.getPrototypeOf(sample), nx=proto.scrollToX, ny=proto.scrollToY, nb=proto.boundScrolling, ns=proto.startRunning;
@@ -15304,15 +15307,19 @@ ip.installCamera=function(){
   try{return ns.apply(this,arguments);}finally{starting=null;}
  };
  proto.scrollToX=wx;proto.scrollToY=wy;proto.boundScrolling=wb;proto.startRunning=ws;
- function rebase(l,dx,dy){
+ function capture(l){
   var st=getState(l);
-  if(l.scrollX!==st.lastX)st.x=l.scrollX;
-  if(l.scrollY!==st.lastY)st.y=l.scrollY;
-  st.x+=dx;st.y+=dy;
-  st.lastX=l.scrollX;st.lastY=l.scrollY;
-  move(l,l.scrollX,0,nx);move(l,l.scrollY,1,ny);
+  return {x:l.scrollX!==st.lastX?l.scrollX:st.x,y:l.scrollY!==st.lastY?l.scrollY:st.y};
  }
- this.cameraPatch={rebase:rebase,proto:proto,nx:nx,ny:ny,nb:nb,ns:ns,wx:wx,wy:wy,wb:wb,ws:ws};
+ function rebase(l,dx,dy,before){
+  var st=getState(l), requested=before||capture(l);
+  st.x=requested.x+dx;st.y=requested.y+dy;
+  l.scrollX=st.x;l.scrollY=st.y;
+  st.lastX=st.x;st.lastY=st.y;
+  move(l,st.x,0,nx);move(l,st.y,1,ny);
+  r.redraw=true;
+ }
+ this.cameraPatch={capture:capture,rebase:rebase,proto:proto,nx:nx,ny:ny,nb:nb,ns:ns,wx:wx,wy:wy,wb:wb,ws:ws};
 };
 ip.removeCamera=function(){var c=this.cameraPatch;if(!c)return;var p=c.proto;if(p.scrollToX===c.wx)p.scrollToX=c.nx;if(p.scrollToY===c.wy)p.scrollToY=c.ny;if(p.boundScrolling===c.wb)p.boundScrolling=c.nb;if(p.startRunning===c.ws)p.startRunning=c.ns;this.cameraPatch=null;};
 ip.log=function(){if(this.properties[4]===1&&typeof console!=='undefined'&&console.log)console.log('[Adaptive Display] '+this.status);};
@@ -20596,9 +20603,9 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.LocalStorage,
 	cr.plugins_.Function,
 	cr.plugins_.Mouse,
-	cr.plugins_.Sprite,
-	cr.plugins_.Spritefont2,
 	cr.plugins_.Text,
+	cr.plugins_.Spritefont2,
+	cr.plugins_.Sprite,
 	cr.behaviors.Fade,
 	cr.behaviors.EightDir,
 	cr.behaviors.scrollto,
