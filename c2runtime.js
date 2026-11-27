@@ -20463,7 +20463,6 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Button.prototype.cnds.OnClicked,
 	cr.plugins_.Sprite.prototype.cnds.OnCollision,
 	cr.plugins_.Sprite.prototype.exps.Y,
-	cr.plugins_.AdaptiveDisplay.prototype.cnds.OnChanged,
 	cr.plugins_.Spritefont2.prototype.acts.SetVisible,
 	cr.plugins_.Spritefont2.prototype.acts.SetPos,
 	cr.system_object.prototype.acts.SetLayerVisible,
